@@ -86,7 +86,8 @@
   --shadow-glow:  0 0 40px var(--color-brand-glow);
 
   /* --- grid ---------------------------------------------------------------- */
-  --grid-max-width: 1440px;
+  --grid-max-width: 1440px;   /* the Figma design reference width */
+  --shell-max-width: 1760px;  /* code fills wider screens (FHD+) responsively */
   --grid-columns: 12;
   --grid-gutter: var(--space-300);   /* 24px */
   --grid-margin: var(--space-600);   /* 48px page margins */

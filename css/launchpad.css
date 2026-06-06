@@ -46,7 +46,7 @@ body {
 .launchpad-shell {
   position: relative;
   z-index: 2;
-  max-width: var(--grid-max-width);
+  max-width: var(--shell-max-width);
   margin: 0 auto;
   padding: var(--space-400) var(--grid-margin) var(--space-800);
   display: flex;
@@ -69,6 +69,8 @@ body {
   align-items: center;
   gap: var(--space-300);
   width: 100%;
+  max-width: var(--shell-max-width);
+  margin-inline: auto;
   padding: var(--space-150) var(--grid-margin);
 }
 
