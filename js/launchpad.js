@@ -26,46 +26,48 @@
       <span class="score-ring__inner"><b>${score}</b><i>score</i></span>
     </span>`;
 
-  /* ---- priority card (rich, hover-revealed quick actions) ------------- */
+  const reasonIcon = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.6.6 1 1.4 1 2.2V16h6v-.3c0-.8.4-1.6 1-2.2A6 6 0 0012 3z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const activityIcon = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none"><path d="M3 12a9 9 0 109-9 9 9 0 00-6.4 2.6L3 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4v4h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  /* ---- priority card (modern, hover-revealed quick actions) ----------- */
   function priorityCard(m) {
     const p = m.preview;
     const lead = m.rank === 1 ? " module-card--lead" : "";
     return `
     <article class="module-card${lead}" tabindex="0"
-             aria-label="Rank ${m.rank}. ${m.displayName}. ${p.headlineMetric.label}: ${fmt(p.headlineMetric.value)}, ${p.headlineMetric.state}. Priority score ${m.priorityScore}.">
-      <div class="card-rankrow">
-        <span class="rank-badge rank-badge--${m.rank}">Rank ${m.rank}</span>
-        ${trend(m.usage.trendPct)}
-        ${scoreRing(m.priorityScore)}
+             aria-label="Rank ${m.rank}. ${m.displayName}. ${p.headlineMetric.label}: ${fmt(p.headlineMetric.value)}, ${p.headlineMetric.state}. Priority score ${m.displayScore}.">
+      <div class="card-top">
+        <span class="card-icon">${svgIcon(m.icon)}</span>
+        ${scoreRing(m.displayScore)}
       </div>
 
-      <header class="card-header">
-        <span class="card-icon">${svgIcon(m.icon)}</span>
-        <span class="card-title-group">
-          <h3 class="card-title">${m.displayName}</h3>
-          <span class="card-category">${m.category}</span>
-        </span>
-      </header>
+      <div class="card-id">
+        <div class="card-id__row">
+          <span class="rank-badge rank-badge--${m.rank}">Rank ${m.rank}</span>
+          ${trend(m.usage.trendPct)}
+        </div>
+        <h3 class="card-title">${m.displayName}</h3>
+        <span class="card-category">${m.category}</span>
+      </div>
 
-      <div class="headline-metric">
-        <span class="headline-metric__value">${fmt(p.headlineMetric.value)}</span>
+      <div class="metric-block">
+        <div class="metric-block__top">
+          <span class="headline-metric__value">${fmt(p.headlineMetric.value)}</span>
+          ${statePill(p.headlineMetric.state)}
+        </div>
         <span class="headline-metric__label">${p.headlineMetric.label}</span>
-        ${statePill(p.headlineMetric.state)}
       </div>
 
       <p class="card-reason">
-        <span class="card-reason__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.6.6 1 1.4 1 2.2V16h6v-.3c0-.8.4-1.6 1-2.2A6 6 0 0012 3z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
-        Surfaced because: <strong>${m.reason}</strong>
+        <span class="card-reason__icon" aria-hidden="true">${reasonIcon}</span>
+        Surfaced because <strong>${m.reason}</strong>
       </p>
 
       <p class="recent-activity">
-        <span class="recent-activity__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none"><path d="M3 12a9 9 0 109-9 9 9 0 00-6.4 2.6L3 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 4v4h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
+        <span class="recent-activity__icon" aria-hidden="true">${activityIcon}</span>
         ${p.recentActivity}
       </p>
+
       <p class="secondary-metric"><strong>${fmt(p.secondaryMetric.value)}</strong> ${p.secondaryMetric.label}</p>
 
       <div class="quick-actions">
@@ -117,10 +119,31 @@
     </div>`;
   }
 
+  /* ---- adaptive ranking signals (clickable chips) -------------------- */
+  const activeSignals = { usage: true, recency: true, urgency: true, role: true };
+
+  function renderSortedBy() {
+    const wrap = document.getElementById("sorted-by");
+    const label = `<span class="sorted-by__label">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true"><path d="M3 6h13M3 12h9M3 18h5M17 8v9m0 0l3-3m-3 3l-3-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Sorted by</span>`;
+    const chips = SORT_SIGNALS.map(s => {
+      const on = activeSignals[s.key];
+      return `<button type="button" class="sorted-chip ${on ? "sorted-chip--active" : "sorted-chip--off"}"
+        data-signal="${s.key}" aria-pressed="${on}" title="Toggle ${s.label} as a ranking signal">${s.label}</button>`;
+    }).join("");
+    wrap.innerHTML = label + chips;
+  }
+
+  function renderPriority() {
+    document.getElementById("priority-grid").innerHTML =
+      getPriorityModules(activeSignals).map(priorityCard).join("");
+  }
+
   /* ---- mount --------------------------------------------------------- */
   function render() {
-    document.getElementById("priority-grid").innerHTML =
-      getPriorityModules().map(priorityCard).join("");
+    renderSortedBy();
+    renderPriority();
     document.getElementById("directory-grid").innerHTML =
       getDirectoryModules().map(compactCard).join("");
     document.getElementById("alerts-list").innerHTML =
@@ -132,12 +155,23 @@
     document.getElementById("alerts-badge").textContent =
       `${SYSTEM_ALERTS.filter(a => a.severity !== "ok").length} active`;
 
-    // filters
     const fwrap = document.getElementById("directory-filters");
     fwrap.innerHTML = DIRECTORY_FILTERS.map((f, i) =>
       `<button class="filter-chip${i === 0 ? " filter-chip--active" : ""}" role="tab" aria-selected="${i === 0}" data-filter="${f}">${f}</button>`
     ).join("");
   }
+
+  /* signal-chip toggle → live re-rank */
+  document.addEventListener("click", (e) => {
+    const chip = e.target.closest(".sorted-chip");
+    if (!chip) return;
+    const key = chip.dataset.signal;
+    const activeCount = Object.values(activeSignals).filter(Boolean).length;
+    if (activeSignals[key] && activeCount === 1) return; // keep at least one signal
+    activeSignals[key] = !activeSignals[key];
+    renderSortedBy();
+    renderPriority();
+  });
 
   /* directory filtering */
   document.addEventListener("click", (e) => {
