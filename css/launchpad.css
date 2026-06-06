@@ -532,31 +532,30 @@ body {
 
 /* greeting row + operational pulse */
 .greeting-row {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: var(--space-500); flex-wrap: wrap;
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: var(--space-500);
 }
-.greeting { min-width: 280px; }
+.greeting { width: 100%; }
 .greeting__title { letter-spacing: -0.01em; }
 
 .pulse {
   background: var(--color-surface-default);
   border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
   padding: var(--space-200) var(--space-300);
   backdrop-filter: blur(18px);
   box-shadow: var(--shadow-card);
-  min-width: 360px;
+  align-self: flex-start;
 }
 .pulse__title {
   font-size: var(--text-label-caps-size); text-transform: uppercase;
   letter-spacing: var(--text-label-caps-spacing); color: var(--color-text-muted);
   margin: 0 0 var(--space-150);
 }
-.pulse__grid { display: grid; grid-template-columns: repeat(2, minmax(150px, 1fr)); gap: var(--space-150); }
+.pulse__grid { display: flex; flex-wrap: wrap; gap: var(--space-150); }
 .pulse-stat {
-  display: flex; flex-direction: column; gap: 2px;
-  padding: var(--space-100) var(--space-150);
-  border-radius: var(--radius-md);
+  display: flex; flex-direction: column; justify-content: center; gap: var(--space-050);
+  padding: var(--space-150) var(--space-300);
   background: var(--color-surface-sunken);
   border-left: 3px solid var(--color-border-strong);
 }
@@ -564,8 +563,8 @@ body {
 .pulse-stat--warning { border-left-color: var(--color-state-warning); }
 .pulse-stat--critical { border-left-color: var(--color-state-critical); }
 .pulse-stat__value { font-size: 19px; font-weight: 700; color: var(--color-text-heading); line-height: 1.2; }
-.pulse-stat__label { font-size: 11px; color: var(--color-text-body); }
-.pulse-stat__trend { font-size: 10px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.pulse-stat__label { font-size: 13px; color: var(--color-text-body); }
+.pulse-stat__trend { font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
 
 /* section head: stacked lead (title + sorted-by) vs inline lead (title + count) */
 .section-head__lead { display: flex; align-items: baseline; gap: var(--space-150); }
