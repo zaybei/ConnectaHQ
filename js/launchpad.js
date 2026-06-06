@@ -34,8 +34,8 @@
     const p = m.preview;
     const lead = m.rank === 1 ? " module-card--lead" : "";
     return `
-    <article class="module-card${lead}" tabindex="0"
-             aria-label="Rank ${m.rank}. ${m.displayName}. ${p.headlineMetric.label}: ${fmt(p.headlineMetric.value)}, ${p.headlineMetric.state}. Priority score ${m.displayScore}.">
+    <article class="module-card${lead}" tabindex="0" data-module="${m.moduleId}"
+             aria-label="Rank ${m.rank}. ${m.displayName}. ${p.headlineMetric.label}: ${fmt(p.headlineMetric.value)}, ${p.headlineMetric.state}. Priority score ${m.displayScore}. Press Enter to open.">
       <div class="card-top">
         <span class="card-icon">${svgIcon(m.icon)}</span>
         ${scoreRing(m.displayScore)}
@@ -119,25 +119,25 @@
     </div>`;
   }
 
-  /* ---- adaptive ranking signals (clickable chips) -------------------- */
-  const activeSignals = { usage: true, recency: true, urgency: true, role: true };
+  /* ---- priority lens tabs (single-select, like the directory filters) - */
+  let activeLens = "all";
 
   function renderSortedBy() {
     const wrap = document.getElementById("sorted-by");
     const label = `<span class="sorted-by__label">
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true"><path d="M3 6h13M3 12h9M3 18h5M17 8v9m0 0l3-3m-3 3l-3-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Sorted by</span>`;
-    const chips = SORT_SIGNALS.map(s => {
-      const on = activeSignals[s.key];
-      return `<button type="button" class="sorted-chip ${on ? "sorted-chip--active" : "sorted-chip--off"}"
-        data-signal="${s.key}" aria-pressed="${on}" title="Toggle ${s.label} as a ranking signal">${s.label}</button>`;
+      Prioritized by</span>`;
+    const chips = PRIORITY_LENSES.map(s => {
+      const on = activeLens === s.key;
+      return `<button type="button" class="sorted-chip ${on ? "sorted-chip--active" : ""}"
+        data-lens="${s.key}" role="tab" aria-selected="${on}" title="Show priority modules by ${s.label}">${s.label}</button>`;
     }).join("");
     wrap.innerHTML = label + chips;
   }
 
   function renderPriority() {
     document.getElementById("priority-grid").innerHTML =
-      getPriorityModules(activeSignals).map(priorityCard).join("");
+      getPriorityModules(activeLens).map(priorityCard).join("");
   }
 
   /* ---- mount --------------------------------------------------------- */
@@ -161,14 +161,12 @@
     ).join("");
   }
 
-  /* signal-chip toggle → live re-rank */
+  /* lens tab select → re-filter the priority set */
   document.addEventListener("click", (e) => {
     const chip = e.target.closest(".sorted-chip");
     if (!chip) return;
-    const key = chip.dataset.signal;
-    const activeCount = Object.values(activeSignals).filter(Boolean).length;
-    if (activeSignals[key] && activeCount === 1) return; // keep at least one signal
-    activeSignals[key] = !activeSignals[key];
+    if (chip.dataset.lens === activeLens) return; // already active
+    activeLens = chip.dataset.lens;
     renderSortedBy();
     renderPriority();
   });
@@ -190,15 +188,103 @@
     });
   });
 
-  /* quick-action clicks (demo: surface intent without navigating away) */
+  /* ---- module detail drawer ------------------------------------------ */
+  const drawerState = { moduleId: null };
+
+  const pillTag = (s, t) => `<span class="state-pill state-pill--${s}"><span class="state-pill__dot"></span>${t}</span>`;
+
+  function renderBlock(b) {
+    if (b.type === "note") return `<p class="dt-note dt-note--${b.state || "info"}">${b.text}</p>`;
+    if (b.type === "subhead") return `<p class="dt-subhead">${b.text}</p>`;
+    if (b.type === "form") return `<form class="dt-form" onsubmit="return false">
+      ${b.fields.map(f => `<label class="dt-field"><span>${f.label}</span><input value="${f.value}" readonly></label>`).join("")}
+      <button type="submit" class="quick-action-btn quick-action-btn--primary dt-submit" data-dt-submit>${b.submit}</button>
+    </form>`;
+    if (b.type === "table") return `<div class="dt-tablewrap"><table class="dt-table">
+      <thead><tr>${b.cols.map(c => `<th>${c}</th>`).join("")}</tr></thead>
+      <tbody>${b.rows.map(r => `<tr>${r.map(c => `<td>${(c && typeof c === "object" && c.pill) ? pillTag(c.pill, c.text) : c}</td>`).join("")}</tr>`).join("")}</tbody>
+    </table></div>`;
+    return "";
+  }
+
+  function drawerHTML(mod, activeTabId) {
+    const tab = mod.tabs.find(t => t.id === activeTabId) || mod.tabs[0];
+    return `
+    <div class="drawer-backdrop" data-close></div>
+    <aside class="drawer" role="dialog" aria-modal="true" aria-label="${mod.title}">
+      <header class="drawer__head">
+        <span class="card-icon drawer__icon">${svgIcon(mod.icon)}</span>
+        <div class="drawer__id">
+          <span class="drawer__crumb">Module workspace</span>
+          <h2 class="drawer__title">${mod.title}</h2>
+          <span class="drawer__cat">${mod.category}</span>
+        </div>
+        <button class="drawer__close" data-close aria-label="Close">✕</button>
+      </header>
+      <div class="drawer__stats">
+        ${mod.stats.map(s => `<div class="drawer-stat${s.state ? " drawer-stat--" + s.state : ""}">
+          <span class="drawer-stat__value">${s.value}</span>
+          <span class="drawer-stat__label">${s.label}</span></div>`).join("")}
+      </div>
+      <div class="drawer__tabs" role="tablist">
+        ${mod.tabs.map(t => `<button class="drawer-tab${t.id === tab.id ? " drawer-tab--active" : ""}" data-tab="${t.id}" role="tab" aria-selected="${t.id === tab.id}">${t.label}</button>`).join("")}
+      </div>
+      <div class="drawer__body">${tab.blocks.map(renderBlock).join("")}</div>
+    </aside>`;
+  }
+
+  function openDrawer(moduleId, tabId) {
+    const mod = MODULE_DETAIL[moduleId];
+    if (!mod) return;
+    drawerState.moduleId = moduleId;
+    const root = document.getElementById("drawer-root");
+    root.innerHTML = drawerHTML(mod, tabId);
+    requestAnimationFrame(() => root.classList.add("is-open"));
+    document.body.style.overflow = "hidden";
+  }
+  function setDrawerTab(tabId) {
+    const mod = MODULE_DETAIL[drawerState.moduleId];
+    if (mod) document.getElementById("drawer-root").innerHTML = drawerHTML(mod, tabId);
+  }
+  function closeDrawer() {
+    const root = document.getElementById("drawer-root");
+    root.classList.remove("is-open");
+    document.body.style.overflow = "";
+    setTimeout(() => { if (!root.classList.contains("is-open")) root.innerHTML = ""; }, 320);
+  }
+
+  /* clicks: quick actions → specific tab, card body → first tab, drawer controls */
   document.addEventListener("click", (e) => {
-    const btn = e.target.closest(".quick-action-btn");
-    if (!btn) return;
-    e.stopPropagation();
-    const original = btn.textContent;
-    btn.textContent = "✓ Done";
-    btn.disabled = true;
-    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1400);
+    const close = e.target.closest("[data-close]");
+    if (close) { closeDrawer(); return; }
+    const tabBtn = e.target.closest(".drawer-tab");
+    if (tabBtn) { setDrawerTab(tabBtn.dataset.tab); return; }
+    const submit = e.target.closest("[data-dt-submit]");
+    if (submit) { e.preventDefault(); const o = submit.textContent; submit.textContent = "✓ Submitted"; submit.disabled = true; setTimeout(() => { submit.textContent = o; submit.disabled = false; }, 1500); return; }
+
+    const action = e.target.closest(".quick-action-btn");
+    if (action) {
+      e.stopPropagation();
+      const moduleId = action.dataset.module;
+      const mod = MODULE_DETAIL[moduleId];
+      const tab = mod && mod.tabs.find(t => t.action === action.dataset.action);
+      openDrawer(moduleId, tab ? tab.id : undefined);
+      return;
+    }
+    const card = e.target.closest(".priority-grid .module-card");
+    if (card && card.dataset.module) openDrawer(card.dataset.module);
+  });
+
+  /* keyboard: Enter opens focused card, Esc closes drawer */
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") return closeDrawer();
+    if (e.key === "Enter") {
+      const card = document.activeElement;
+      if (card && card.classList && card.classList.contains("module-card") && card.dataset.module) {
+        e.preventDefault();
+        openDrawer(card.dataset.module);
+      }
+    }
   });
 
   /* ---- motion toggle: WCAG 2.2.2 pause/play -------------------------- */

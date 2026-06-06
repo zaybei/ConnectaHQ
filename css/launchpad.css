@@ -37,9 +37,9 @@ body {
   z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(1200px 600px at 18% -10%, rgba(109, 123, 255, 0.22), transparent 60%),
-    radial-gradient(1000px 700px at 110% 10%, rgba(47, 212, 196, 0.16), transparent 55%),
-    linear-gradient(180deg, rgba(7, 11, 22, 0.35) 0%, var(--color-background-veil) 70%);
+    radial-gradient(1200px 600px at 18% -10%, rgba(109, 123, 255, 0.18), transparent 60%),
+    radial-gradient(1000px 700px at 110% 10%, rgba(47, 212, 196, 0.13), transparent 55%),
+    linear-gradient(180deg, rgba(7, 11, 22, 0.55) 0%, var(--color-background-veil) 60%);
 }
 
 /* --- app shell (the master wrapper; everything lives in flow) ----------- */
@@ -595,7 +595,7 @@ body {
 .sorted-chip {
   font-size: 12px; padding: 4px 10px; border-radius: var(--radius-pill);
   background: var(--color-surface-default); border: 1px solid var(--color-border-subtle);
-  color: var(--color-text-body); backdrop-filter: blur(8px);
+  color: var(--color-text-muted); backdrop-filter: blur(8px);
 }
 
 /* rank row inside priority card */
@@ -733,11 +733,128 @@ body {
   border-color: transparent;
   font-weight: 600;
 }
-.sorted-chip--off { opacity: 0.5; color: var(--color-text-muted); text-decoration: line-through; }
-.sorted-chip:hover { border-color: var(--color-border-strong); }
+.sorted-chip:hover { border-color: var(--color-border-strong); color: var(--color-text-body); }
+.sorted-chip--active:hover { color: var(--color-text-inverse); }
 .sorted-chip:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(124, 140, 255, 0.45); }
 
 /* --- responsive overrides for the 4-up grid (higher specificity) --- */
 @media (max-width: 1280px) { .priority-grid > .module-card { grid-column: span 6; } }
 @media (max-width: 760px)  { .priority-grid > .module-card { grid-column: span 12; } }
 @media (max-width: 720px)  { .top-bar__inner { padding-inline: var(--space-200); } }
+
+/* ============================================================================
+   Iteration 4 — FHD scale-up + module detail drawer
+   ========================================================================== */
+
+/* Larger screens (FHD+) scale type & key sizes up so the UI feels substantial.
+   Breakpoint sits just above 1440 so the Figma reference width stays identical,
+   while common FHD setups (e.g. 1920 at 125% Windows scaling = 1536 CSS px) get
+   the larger, more legible type instead of falling into the small-text gap. */
+@media (min-width: 1500px) {
+  :root {
+    --shell-max-width: 1800px;
+    --text-heading-h1-size: 40px; --text-heading-h1-line: 48px;
+    --text-heading-h2-size: 28px; --text-heading-h2-line: 36px;
+    --text-heading-h3-size: 20px; --text-heading-h3-line: 28px;
+    --text-body-lg-size: 18px;    --text-body-lg-line: 28px;
+    --text-body-md-size: 15px;    --text-body-md-line: 22px;
+    --text-body-sm-size: 14px;    --text-body-sm-line: 20px;
+    --text-metric-xl-size: 34px;  --text-metric-xl-line: 40px;
+    --text-label-caps-size: 12px;
+  }
+  .priority-grid > .module-card { padding: var(--space-300); gap: var(--space-200); }
+  .priority-grid .card-icon { width: 52px; height: 52px; }
+  .score-ring { width: 52px; height: 52px; }
+  .score-ring__inner { width: 43px; height: 43px; }
+  .pulse-stat__value { font-size: 22px; }
+  .pulse-stat__label { font-size: 14px; }
+}
+
+/* ---- module detail drawer ---- */
+.drawer-root {
+  position: fixed; inset: 0; z-index: 100;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+.drawer-root.is-open { opacity: 1; visibility: visible; }
+.drawer-backdrop { position: absolute; inset: 0; background: rgba(3, 6, 14, 0.62); backdrop-filter: blur(4px); }
+.drawer {
+  position: absolute; top: 0; right: 0; height: 100%;
+  width: min(560px, 94vw);
+  display: flex; flex-direction: column;
+  background: var(--color-surface-raised);
+  border-left: 1px solid var(--color-border-strong);
+  box-shadow: -24px 0 60px rgba(0, 0, 0, 0.5);
+  transform: translateX(100%);
+  transition: transform 0.3s var(--easing-standard);
+}
+.drawer-root.is-open .drawer { transform: translateX(0); }
+
+.drawer__head {
+  display: flex; align-items: flex-start; gap: var(--space-200);
+  padding: var(--space-300); border-bottom: 1px solid var(--color-border-subtle);
+}
+.drawer__icon { flex: none; }
+.drawer__id { display: flex; flex-direction: column; gap: 2px; }
+.drawer__crumb { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-muted); }
+.drawer__title { margin: 0; font-size: var(--text-heading-h2-size); line-height: var(--text-heading-h2-line); color: var(--color-text-heading); font-weight: 650; }
+.drawer__cat { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-brand-secondary); }
+.drawer__close {
+  margin-left: auto; width: 36px; height: 36px; flex: none;
+  border-radius: var(--radius-md); border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-default); color: var(--color-text-body); cursor: pointer; font-size: 14px;
+}
+.drawer__close:hover { background: var(--color-surface-hover); }
+
+.drawer__stats { display: flex; gap: var(--space-150); padding: var(--space-300) var(--space-300) 0; }
+.drawer-stat {
+  flex: 1; display: flex; flex-direction: column; gap: 2px;
+  padding: var(--space-150); border-radius: var(--radius-md);
+  background: var(--color-surface-sunken); border-left: 3px solid var(--color-border-strong);
+}
+.drawer-stat--ok { border-left-color: var(--color-state-ok); }
+.drawer-stat--warning { border-left-color: var(--color-state-warning); }
+.drawer-stat--critical { border-left-color: var(--color-state-critical); }
+.drawer-stat__value { font-size: 20px; font-weight: 700; color: var(--color-text-heading); }
+.drawer-stat__label { font-size: 12px; color: var(--color-text-muted); }
+
+.drawer__tabs { display: flex; gap: var(--space-100); padding: var(--space-300) var(--space-300) 0; flex-wrap: wrap; }
+.drawer-tab {
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  padding: 8px 14px; border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border-subtle); background: var(--color-surface-default); color: var(--color-text-muted);
+  transition: background var(--motion-fast) var(--easing-standard), color var(--motion-fast) var(--easing-standard);
+}
+.drawer-tab:hover { color: var(--color-text-body); }
+.drawer-tab--active {
+  background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-secondary));
+  color: var(--color-text-inverse); border-color: transparent;
+}
+
+.drawer__body { flex: 1; overflow: auto; padding: var(--space-300); display: flex; flex-direction: column; gap: var(--space-200); }
+.dt-note {
+  font-size: 13px; padding: 10px 14px; border-radius: var(--radius-md); margin: 0;
+  background: var(--color-surface-sunken); border-left: 3px solid var(--color-border-strong); color: var(--color-text-body);
+}
+.dt-note--critical { border-left-color: var(--color-state-critical); }
+.dt-note--warning { border-left-color: var(--color-state-warning); }
+.dt-subhead { font-size: 13px; color: var(--color-text-muted); margin: 0; }
+
+.dt-tablewrap { border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md); overflow: hidden; }
+.dt-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dt-table th {
+  text-align: left; padding: 10px 14px; background: var(--color-surface-sunken);
+  color: var(--color-text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.dt-table td { padding: 10px 14px; border-top: 1px solid var(--color-border-subtle); color: var(--color-text-body); white-space: nowrap; }
+.dt-table tbody tr:hover { background: var(--color-surface-default); }
+.dt-table .state-pill { font-size: 10px; }
+
+.dt-form { display: flex; flex-direction: column; gap: var(--space-150); }
+.dt-field { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--color-text-muted); }
+.dt-field input {
+  height: 42px; padding: 0 14px; border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-subtle); background: var(--color-surface-sunken);
+  color: var(--color-text-body); font-size: 14px; font-family: inherit;
+}
+.dt-submit { flex: 0 0 auto; align-self: flex-start; height: 42px; padding: 0 20px; margin-top: 4px; }

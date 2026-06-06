@@ -29,7 +29,7 @@
   /* --- color / text -------------------------------------------------------- */
   --color-text-heading:         #f4f7fc; /* ~16:1 on base  */
   --color-text-body:            #c3cce0; /* ~9:1  on surface */
-  --color-text-muted:           #97a2bd; /* ~4.7:1 on surface (AA) */
+  --color-text-muted:           #a6b1cd; /* ~6:1 on surface; holds AA over the veiled background */
   --color-text-inverse:         #070b16;
 
   /* --- color / brand ------------------------------------------------------- */
