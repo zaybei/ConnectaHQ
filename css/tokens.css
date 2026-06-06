@@ -1,0 +1,99 @@
+/* ============================================================================
+   ConnectaHQ — Stitch Design System Tokens
+   ----------------------------------------------------------------------------
+   Single source of truth for both code and Figma. Each CSS custom property
+   maps 1:1 to a Figma Local Variable using the category/item/state convention.
+
+   CSS variable            ->  Figma variable
+   --color-surface-hover   ->  color/surface/hover
+   --text-heading-h2-size  ->  text/heading/h2 (size)
+   --space-300             ->  space/300
+   ========================================================================== */
+
+:root {
+  /* --- color / background --------------------------------------------------- */
+  --color-background-base:      #070b16; /* page base, behind canvas */
+  --color-background-veil:      rgba(7, 11, 22, 0.72); /* legibility veil over motion */
+
+  /* --- color / surface ----------------------------------------------------- */
+  --color-surface-default:      rgba(20, 27, 45, 0.72);  /* glass card */
+  --color-surface-hover:        rgba(30, 40, 66, 0.86);
+  --color-surface-raised:       rgba(26, 34, 56, 0.92);  /* popovers, search */
+  --color-surface-sunken:       rgba(10, 15, 28, 0.60);
+
+  /* --- color / border ------------------------------------------------------ */
+  --color-border-subtle:        rgba(148, 163, 199, 0.14);
+  --color-border-strong:        rgba(148, 163, 199, 0.28);
+  --color-border-focus:         #7c8cff;
+
+  /* --- color / text -------------------------------------------------------- */
+  --color-text-heading:         #f4f7fc; /* ~16:1 on base  */
+  --color-text-body:            #c3cce0; /* ~9:1  on surface */
+  --color-text-muted:           #97a2bd; /* ~4.7:1 on surface (AA) */
+  --color-text-inverse:         #070b16;
+
+  /* --- color / brand ------------------------------------------------------- */
+  --color-brand-primary:        #6d7bff; /* indigo */
+  --color-brand-primary-hover:  #8590ff;
+  --color-brand-secondary:      #2fd4c4; /* teal  */
+  --color-brand-glow:           rgba(109, 123, 255, 0.45);
+
+  /* --- color / state ------------------------------------------------------- */
+  --color-state-ok:             #4ade8a;
+  --color-state-ok-surface:     rgba(74, 222, 138, 0.14);
+  --color-state-warning:        #f7b955;
+  --color-state-warning-surface:rgba(247, 185, 85, 0.16);
+  --color-state-critical:       #ff6b7d;
+  --color-state-critical-surface:rgba(255, 107, 125, 0.16);
+
+  /* --- typography / family ------------------------------------------------- */
+  --font-family-base: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  /* --- text / heading ------------------------------------------------------ */
+  --text-heading-h1-size:   32px; --text-heading-h1-line: 40px; --text-heading-h1-weight: 700;
+  --text-heading-h2-size:   24px; --text-heading-h2-line: 32px; --text-heading-h2-weight: 650;
+  --text-heading-h3-size:   18px; --text-heading-h3-line: 24px; --text-heading-h3-weight: 600;
+
+  /* --- text / body --------------------------------------------------------- */
+  --text-body-lg-size:  16px; --text-body-lg-line: 24px;
+  --text-body-md-size:  14px; --text-body-md-line: 20px;
+  --text-body-sm-size:  13px; --text-body-sm-line: 18px;
+
+  /* --- text / metric & label ---------------------------------------------- */
+  --text-metric-xl-size: 28px; --text-metric-xl-line: 32px; --text-metric-xl-weight: 700;
+  --text-label-caps-size: 11px; --text-label-caps-line: 16px; --text-label-caps-spacing: 0.08em;
+
+  /* --- space (8pt baseline grid) ------------------------------------------ */
+  --space-050: 4px;
+  --space-100: 8px;
+  --space-150: 12px;
+  --space-200: 16px;
+  --space-300: 24px;   /* = grid gutter */
+  --space-400: 32px;
+  --space-500: 40px;
+  --space-600: 48px;
+  --space-800: 64px;
+
+  /* --- radius -------------------------------------------------------------- */
+  --radius-sm:   8px;
+  --radius-md:  12px;
+  --radius-lg:  20px;
+  --radius-pill: 999px;
+
+  /* --- elevation ----------------------------------------------------------- */
+  --shadow-card:  0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--color-border-strong);
+  --shadow-glow:  0 0 40px var(--color-brand-glow);
+
+  /* --- grid ---------------------------------------------------------------- */
+  --grid-max-width: 1440px;
+  --grid-columns: 12;
+  --grid-gutter: var(--space-300);   /* 24px */
+  --grid-margin: var(--space-600);   /* 48px page margins */
+
+  /* --- motion -------------------------------------------------------------- */
+  --motion-fast: 140ms;
+  --motion-base: 240ms;
+  --motion-slow: 420ms;
+  --easing-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+}

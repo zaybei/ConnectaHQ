@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ConnectaHQ — Launchpad</title>
+  <meta name="description" content="Adaptive, usage-prioritized launchpad for the ConnectaHQ enterprise Telecom SaaS platform." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/launchpad.css" />
+</head>
+<body>
+  <!-- animated telco background (network constellation) -->
+  <canvas id="network-canvas" class="network-canvas" aria-hidden="true"></canvas>
+  <div class="background-veil" aria-hidden="true"></div>
+
+  <main class="launchpad-shell">
+    <!-- top bar -->
+    <header class="top-bar">
+      <a class="brand-mark" href="#">
+        <span class="brand-mark__glyph" aria-hidden="true">◈</span>
+        ConnectaHQ
+      </a>
+
+      <div class="global-search">
+        <span class="global-search__icon" aria-hidden="true">⌕</span>
+        <input class="global-search__input" type="search"
+               placeholder="Search 15+ modules, actions, accounts…"
+               aria-label="Search modules and actions" />
+      </div>
+
+      <button id="motion-toggle" class="motion-toggle" type="button" aria-pressed="false">
+        <span aria-hidden="true">❙❙</span>
+        <span class="motion-toggle__label">Pause motion</span>
+      </button>
+
+      <div class="user-chip">
+        <span class="user-chip__avatar" aria-hidden="true">AK</span>
+        <span>
+          <span class="user-chip__name">Aftab K.</span>
+          <span class="user-chip__role"> · NetOps Lead</span>
+        </span>
+      </div>
+    </header>
+
+    <!-- greeting -->
+    <section class="greeting">
+      <p class="greeting__eyebrow">Friday · 6 June 2026</p>
+      <h1 class="greeting__title">Welcome back, Aftab</h1>
+      <p class="greeting__subtitle">Here's what needs you across your most-used modules.</p>
+    </section>
+
+    <!-- Priority / Recent Modules -->
+    <section aria-labelledby="priority-heading">
+      <div class="section-head">
+        <h2 id="priority-heading" class="section-head__title">Priority Modules</h2>
+        <span class="section-head__hint">Pinned from your 7-day usage · hover a card for quick actions</span>
+      </div>
+      <div id="priority-grid" class="priority-grid"></div>
+    </section>
+
+    <!-- Directory + Alerts -->
+    <div class="workspace-grid">
+      <section class="workspace-grid__main" aria-labelledby="directory-heading">
+        <div class="section-head">
+          <h2 id="directory-heading" class="section-head__title">Global Module Directory</h2>
+          <span class="section-head__hint">Everything else, one search away</span>
+        </div>
+        <div id="directory-grid" class="directory-grid"></div>
+      </section>
+
+      <aside class="workspace-grid__rail" aria-labelledby="alerts-heading">
+        <div class="section-head">
+          <h2 id="alerts-heading" class="section-head__title">System Alerts</h2>
+        </div>
+        <div class="alerts-rail">
+          <div id="alerts-list" role="list"></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script src="js/modules-data.js"></script>
+  <script src="js/network-background.js"></script>
+  <script src="js/launchpad.js"></script>
+</body>
+</html>
