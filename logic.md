@@ -28,31 +28,37 @@ rises either because it is **used often**, **used recently**, or **needs action 
 
 ```
 priorityScore =
-    (W_freq    × frequencyScore)     // how much they use it
-  + (W_recency × recencyScore)       // how recently they touched it
-  + (W_urgency × urgencyScore)       // how badly it needs attention
+    (W_usage   × usageScore)      // how much they use it (7-day visits)
+  + (W_recency × recencyScore)    // how recently they touched it
+  + (W_urgency × urgencyScore)    // how badly it needs attention
+  + (W_role    × roleScore)       // relevance to the signed-in user's role
 
-Weights:  W_freq = 0.50   W_recency = 0.30   W_urgency = 0.20
+Weights:  W_usage = 0.40   W_recency = 0.25   W_urgency = 0.20   W_role = 0.15
 ```
+
+The blend is re-normalised against whichever signals are active, so the score always lands
+on a 0–100 scale and the priority **lenses** can re-rank the set by a single signal on demand.
 
 | Signal | Definition | Normalisation |
 |---|---|---|
-| `frequencyScore` | Visit count over the **7-day trailing window**, exponentially decayed so today's visits weigh more than day-7 visits (`decay = 0.85^dayAge`). | Min-max normalised 0–1 against the user's busiest module. |
-| `recencyScore` | Time since `lastAccessed`. | `1.0` if < 4h, linearly decaying to `0.0` at 14 days. |
-| `urgencyScore` | Derived from pending/at-risk items in the module (e.g. SLA breaches, failed billing runs, batches awaiting activation). | `0.0`–`1.0`; any `critical` alert clamps to `1.0`. |
+| `usageScore` | Visit count over the **7-day trailing window** (`visits7d`). | Min-max normalised 0–1 against the user's busiest module. |
+| `recencyScore` | Time since `lastAccessed`. | Linear: `1.0` at access time, decaying to `0.0` at 14 days (`1 − ageDays / 14`). |
+| `urgencyScore` | Derived from the module's open alert (SLA breaches, failed billing runs, batches awaiting activation). | `critical → 1.0`, `warning → 0.6`, none `→ 0.0`. |
+| `roleScore` | Whether the module is relevant to the signed-in user's role (e.g. _NetOps Lead_). | `1.0` if role-relevant, else `0.0`. |
 
 ### 2.2 Ordering rules (applied in sequence)
 
-- **Rule 1 — Pin the top 3.** The three highest `priorityScore` modules are pinned to the
-  **Priority Modules** zone as large, preview-rich cards. This is the 7-day-trailing
-  "what you live in" set.
+- **Rule 1 — Pin the top 4.** The four highest `priorityScore` modules are pinned to the
+  **Priority Modules** zone as large, preview-rich cards — the 7-day-trailing "what you live
+  in" set. A single-select **lens** (All · 7-day usage · recent activity · operational
+  urgency · role relevance) can re-rank or narrow this set to one signal at a time.
 - **Rule 2 — Recency tie-break.** Equal scores resolve by most-recent `lastAccessed`.
 - **Rule 3 — Urgency override.** A module carrying a `critical` alert is **floated into the
-  top 3 even if its frequency is low** (e.g. a billing run failed overnight). It is badged
+  top 4 even if its frequency is low** (e.g. a billing run failed overnight). It is badged
   so the promotion is explainable, never silent.
 - **Rule 4 — Cold-start fallback.** A user with < 5 lifetime sessions has no reliable
-  history, so the top 3 are seeded from a **role template** (e.g. _NetOps_ → Network
-  Diagnostics, Fleet Tracking, SIM Provisioning). The system blends toward real usage as
+  history, so the top 4 are seeded from a **role template** (e.g. _NetOps_ → Network
+  Diagnostics, Fleet Tracking, SIM Provisioning, Bulk Billing). The system blends toward real usage as
   data accumulates.
 - **Rule 5 — Anti-thrash.** Ranks are recomputed at most **once per session load** and a
   module must beat the card below it by **≥ 8%** to swap positions, so the layout doesn't
@@ -94,6 +100,7 @@ deep on click.**
   "category": "connectivity",              // connectivity | billing | platform | network | security
   "iconToken": "icon/module/sim",          // references a design token, never a raw asset path
   "route": "/modules/sim-provisioning",
+  "roleRelevant": true,                     // relevant to the signed-in user's role (NetOps Lead)
 
   "usage": {
     "visits7d": 42,                         // raw count in trailing 7 days
@@ -101,8 +108,9 @@ deep on click.**
     "trendPct": 12                          // % change vs previous 7-day window (for sparkline/arrow)
   },
 
-  "priorityScore": 87.4,                    // computed; drives ordering
-  "pinned": true,                           // true => Priority zone, false => Directory
+  "priorityScore": 81.0,                    // computed live from the weighted blend; drives ordering
+  "pinned": true,                           // true => Priority zone (top 4), false => Directory
+  "reason": "Frequent use + 3 pending batches", // human-readable "why this surfaced" label
 
   "preview": {
     "headlineMetric": { "label": "Pending Batches", "value": 3, "state": "warning" },
@@ -128,17 +136,20 @@ deep on click.**
 
 ---
 
-## 5. Five seed modules with realistic recent-activity metadata
+## 5. Seed modules with realistic recent-activity metadata
 
-Representative slice of the 15+ catalogue, ranked by `priorityScore`.
+The **top 4 by `priorityScore`** pin to the Priority zone; the rest (Fleet Tracking and the
+wider catalogue) live in the searchable Global Module Directory. Scores below are the live
+weighted blend for the _NetOps Lead_ profile at the reference time — they recompute each
+session as recency and usage shift, so the exact value is less important than the ordering.
 
-| Rank | Module | `moduleId` | Category | visits7d | Headline metric | Recent activity | Score |
-|---|---|---|---|---|---|---|---|
-| 1 | **Network Diagnostics** | `network-diagnostics` | network | 58 | `2 Cells Degraded` · critical | Latency spike cleared on Cell-EU-114, 18m ago | 94.1 |
-| 2 | **SIM Provisioning** | `sim-provisioning` | connectivity | 42 | `3 Pending Batches` · warning | Batch #4821 activated 2h ago | 87.4 |
-| 3 | **Bulk Billing** | `bulk-billing` | billing | 37 | `1 Run Failed` · critical | June cycle invoiced 14,902 accounts, 5h ago | 83.0 |
-| 4 | API Management | `api-management` | platform | 21 | `99.95% Uptime` · ok | New key issued to "FleetCo Integrations", 1d ago | 61.2 |
-| 5 | Fleet Tracking | `fleet-tracking` | connectivity | 14 | `127 Devices Online` · ok | 4 devices went offline in Zone-West, 3h ago | 48.7 |
+| Rank | Module | `moduleId` | Category | visits7d | Role-relevant | Headline metric | Recent activity | Score |
+|---|---|---|---|---|---|---|---|---|
+| 1 | **Network Diagnostics** | `network-diagnostics` | network | 58 | yes | `2 Cells Degraded` · critical | Latency spike cleared on Cell-EU-114, 18m ago | 100 |
+| 2 | **SIM Provisioning** | `sim-provisioning` | connectivity | 42 | yes | `3 Batches Pending` · warning | Batch #4821 activated 2h ago | 81 |
+| 3 | **Bulk Billing** | `bulk-billing` | billing | 37 | no | `1 Run Failed` · critical | June cycle invoiced 14,902 accounts, 5h ago | 70 |
+| 4 | **API Management** | `api-management` | platform | 21 | no | `99.95% Uptime` · ok | New key issued to "FleetCo Integrations", 1d ago | 38 |
+| — | Fleet Tracking _(directory)_ | `fleet-tracking` | connectivity | 14 | no | `127 Devices Online` · ok | 4 devices went offline in Zone-West, 3h ago | — |
 
 ### 5.1 Full seed records (drives both the code artifact and the Figma content)
 
@@ -150,8 +161,9 @@ Representative slice of the 15+ catalogue, ranked by `priorityScore`.
     "category": "network",
     "iconToken": "icon/module/network",
     "route": "/modules/network-diagnostics",
+    "roleRelevant": true,
     "usage": { "visits7d": 58, "lastAccessed": "2026-06-06T08:42:00Z", "trendPct": 23 },
-    "priorityScore": 94.1,
+    "priorityScore": 100.0,
     "pinned": true,
     "preview": {
       "headlineMetric": { "label": "Cells Degraded", "value": 2, "state": "critical" },
@@ -170,8 +182,9 @@ Representative slice of the 15+ catalogue, ranked by `priorityScore`.
     "category": "connectivity",
     "iconToken": "icon/module/sim",
     "route": "/modules/sim-provisioning",
+    "roleRelevant": true,
     "usage": { "visits7d": 42, "lastAccessed": "2026-06-06T08:14:00Z", "trendPct": 12 },
-    "priorityScore": 87.4,
+    "priorityScore": 81.0,
     "pinned": true,
     "preview": {
       "headlineMetric": { "label": "Pending Batches", "value": 3, "state": "warning" },
@@ -190,8 +203,9 @@ Representative slice of the 15+ catalogue, ranked by `priorityScore`.
     "category": "billing",
     "iconToken": "icon/module/billing",
     "route": "/modules/bulk-billing",
+    "roleRelevant": false,
     "usage": { "visits7d": 37, "lastAccessed": "2026-06-06T03:30:00Z", "trendPct": -4 },
-    "priorityScore": 83.0,
+    "priorityScore": 70.0,
     "pinned": true,
     "preview": {
       "headlineMetric": { "label": "Failed Runs", "value": 1, "state": "critical" },
@@ -210,9 +224,10 @@ Representative slice of the 15+ catalogue, ranked by `priorityScore`.
     "category": "platform",
     "iconToken": "icon/module/api",
     "route": "/modules/api-management",
+    "roleRelevant": false,
     "usage": { "visits7d": 21, "lastAccessed": "2026-06-05T16:05:00Z", "trendPct": 8 },
-    "priorityScore": 61.2,
-    "pinned": false,
+    "priorityScore": 38.0,
+    "pinned": true,
     "preview": {
       "headlineMetric": { "label": "Uptime (30d)", "value": "99.95%", "state": "ok" },
       "recentActivity": "New key issued to \"FleetCo Integrations\", 1d ago",
@@ -230,6 +245,7 @@ Representative slice of the 15+ catalogue, ranked by `priorityScore`.
     "category": "connectivity",
     "iconToken": "icon/module/fleet",
     "route": "/modules/fleet-tracking",
+    "roleRelevant": false,
     "usage": { "visits7d": 14, "lastAccessed": "2026-06-06T05:50:00Z", "trendPct": 2 },
     "priorityScore": 48.7,
     "pinned": false,
@@ -262,4 +278,4 @@ Representative slice of the 15+ catalogue, ranked by `priorityScore`.
 - **Accessibility:** urgency is never colour-only — every `critical`/`warning` carries a
   text label and icon, satisfying WCAG 1.4.1 (Use of Colour).
 - **Telemetry loop:** each card click emits `launchpad.module.open` with `moduleId` and
-  `rank`, feeding the next session's `frequencyScore` — the system learns from itself.
+  `rank`, feeding the next session's `usageScore` — the system learns from itself.
