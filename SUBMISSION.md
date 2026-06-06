@@ -6,7 +6,7 @@ Take-home: **Telecom SaaS Adaptive Launchpad** · Designed by **Aftab**
 
 | # | Deliverable | Link |
 |---|---|---|
-| 1 | **Launchpad Workspace** (Figma — UI, Auto-Layout, Local Variables) | _Figma file: ConnectaHQ_ |
+| 1 | **Launchpad Workspace** (Figma — UI, Auto-Layout, Local Variables) | [ConnectaHQ — Figma](https://www.figma.com/design/Q1tBrMBRkfSJL1tIckAAsY/ConnectaHQ?node-id=0-1) |
 | 2 | **Logic Document** (Phase 1 — sorting rules + data structures) | [logic.md](logic.md) |
 | 3 | **Execution Artifact** (responsive front-end, kebab-case CSS) | **https://connectahq-launchpad-seven.vercel.app** · source: [index.html](index.html) |
 | 4 | **AI Workflow Summary** | [ai-workflow-summary.md](ai-workflow-summary.md) |
@@ -17,8 +17,10 @@ Take-home: **Telecom SaaS Adaptive Launchpad** · Designed by **Aftab**
   `category/item/state` naming (`color/surface/hover`, `text/heading/h2`). Same tokens drive
   the CSS via `var(--…)` custom properties (1:1 mapping, single source of truth).
 - **Grid** — 1440px viewport, strict 12-column grid, 24px gutter, 8pt baseline, 48px margins.
-- **Auto-Layout** — entire Figma layout is Auto-Layout; no fixed-position elements outside the
-  master wrapper.
+- **Auto-Layout** — entire Figma layout is Auto-Layout on a 12-column / 24px-gutter / 8pt grid;
+  no fixed-position elements outside the master wrapper. A dedicated **Wireframe** page documents
+  the Phase 2 low-fidelity → Auto-Layout step; the **Components** page holds the tokenized
+  component/variant library (Module Card with Default/Hover, Left Nav, Module Drawer, etc.).
 - **Asset handoff** — all CSS classes are kebab-case; module ids are kebab-case and reused as
   route + asset + analytics keys.
 - **Adaptive logic** — usage-based priority (7-day frequency + recency + urgency), top-3 pinning,

@@ -4,7 +4,8 @@ Personalized, usage-prioritized post-login Launchpad for **ConnectaHQ**, an ente
 Telecom SaaS platform with 15+ functional modules. Built as a take-home design + front-end
 exercise.
 
-**Live demo:** _(Vercel URL added on deploy)_
+**Live demo:** https://connectahq-launchpad-seven.vercel.app
+**Figma file:** https://www.figma.com/design/Q1tBrMBRkfSJL1tIckAAsY/ConnectaHQ?node-id=0-1
 
 ## What it does
 Prevents cognitive overload by ranking modules on real usage instead of showing a static
